@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -190,7 +189,8 @@ private fun StatusCard(
                 when {
                     connected -> "服务正在运行，只接收窗口所属应用的包名。"
                     enabled -> "系统已授权；服务可能正在被系统重新连接。"
-                    else -> "无需联网、悬浮窗、使用情况或存储权限。",
+                    else -> "无需联网、悬浮窗、使用情况或存储权限。"
+                },
             )
             Button(onClick = openAccessibilitySettings) {
                 Text(if (enabled) "检查无障碍设置" else "去启用")

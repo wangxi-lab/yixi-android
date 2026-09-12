@@ -8,20 +8,44 @@ android {
     namespace = "com.wangxilab.yixi"
     compileSdk = 36
 
+    val releaseKeystoreFile = providers.gradleProperty("YIXI_KEYSTORE_FILE").orNull
+    val releaseKeystorePassword = providers.gradleProperty("YIXI_KEYSTORE_PASSWORD").orNull
+    val releaseKeyAlias = providers.gradleProperty("YIXI_KEY_ALIAS").orNull
+    val releaseKeyPassword = providers.gradleProperty("YIXI_KEY_PASSWORD").orNull
+
     defaultConfig {
         applicationId = "com.wangxilab.yixi"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2.0-alpha.1"
+        versionCode = 3
+        versionName = "0.3.0-alpha.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
 
+    signingConfigs {
+        create("release") {
+            if (
+                releaseKeystoreFile != null &&
+                releaseKeystorePassword != null &&
+                releaseKeyAlias != null &&
+                releaseKeyPassword != null
+            ) {
+                storeFile = file(releaseKeystoreFile)
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
+            if (releaseKeystoreFile != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

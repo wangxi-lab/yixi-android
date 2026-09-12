@@ -1,0 +1,90 @@
+name: Publish signed release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/signed-release.yml
+      - app/build.gradle.kts
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check required signing secrets
+        env:
+          YIXI_KEYSTORE_BASE64: ${{ secrets.YIXI_KEYSTORE_BASE64 }}
+          YIXI_KEYSTORE_PASSWORD: ${{ secrets.YIXI_KEYSTORE_PASSWORD }}
+          YIXI_KEY_ALIAS: ${{ secrets.YIXI_KEY_ALIAS }}
+          YIXI_KEY_PASSWORD: ${{ secrets.YIXI_KEY_PASSWORD }}
+        run: |
+          test -n "$YIXI_KEYSTORE_BASE64" || { echo "Missing YIXI_KEYSTORE_BASE64"; exit 1; }
+          test -n "$YIXI_KEYSTORE_PASSWORD" || { echo "Missing YIXI_KEYSTORE_PASSWORD"; exit 1; }
+          test -n "$YIXI_KEY_ALIAS" || { echo "Missing YIXI_KEY_ALIAS"; exit 1; }
+          test -n "$YIXI_KEY_PASSWORD" || { echo "Missing YIXI_KEY_PASSWORD"; exit 1; }
+
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android 16 SDK
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.11.1
+
+      - name: Restore release keystore
+        env:
+          YIXI_KEYSTORE_BASE64: ${{ secrets.YIXI_KEYSTORE_BASE64 }}
+        run: printf '%s' "$YIXI_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/yixi-release.jks"
+
+      - name: Build and verify signed APK
+        env:
+          ORG_GRADLE_PROJECT_YIXI_KEYSTORE_FILE: ${{ runner.temp }}/yixi-release.jks
+          ORG_GRADLE_PROJECT_YIXI_KEYSTORE_PASSWORD: ${{ secrets.YIXI_KEYSTORE_PASSWORD }}
+          ORG_GRADLE_PROJECT_YIXI_KEY_ALIAS: ${{ secrets.YIXI_KEY_ALIAS }}
+          ORG_GRADLE_PROJECT_YIXI_KEY_PASSWORD: ${{ secrets.YIXI_KEY_PASSWORD }}
+        run: |
+          gradle --no-daemon checkPrivacyManifest testDebugUnitTest lintRelease assembleRelease
+          bash scripts/check-apk-permissions.sh app/build/outputs/apk/release/app-release.apk
+          apksigner verify --verbose app/build/outputs/apk/release/app-release.apk
+
+      - name: Prepare release assets
+        run: |
+          mkdir release-assets
+          cp app/build/outputs/apk/release/app-release.apk release-assets/yixi-v0.3.0-alpha.1.apk
+          cd release-assets
+          sha256sum yixi-v0.3.0-alpha.1.apk > yixi-v0.3.0-alpha.1.apk.sha256
+
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.3.0-alpha.1 \
+            release-assets/yixi-v0.3.0-alpha.1.apk \
+            release-assets/yixi-v0.3.0-alpha.1.apk.sha256 \
+            --repo wangxi-lab/yixi-android \
+            --target "$GITHUB_SHA" \
+            --title "一息 v0.3.0-alpha.1" \
+            --prerelease \
+            --notes "首个采用固定发布证书签名的预览版本。从此版本开始，只要继续使用同一份签名密钥，后续 APK 即可覆盖升级并保留本地数据。由于此前预览版使用临时 Debug 签名，安装本版本前仍需最后一次卸载旧版。"
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/yixi-release.jks"

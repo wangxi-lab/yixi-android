@@ -23,26 +23,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh run download 34670018196 \
+          gh run download 34672460389 \
             --repo wangxi-lab/yixi-android \
             --name yixi-debug-apk \
             --dir release-assets
 
       - name: Name asset and calculate checksum
         run: |
-          mv release-assets/app-debug.apk release-assets/yixi-v0.1.0-alpha.1-debug.apk
+          mv release-assets/app-debug.apk release-assets/yixi-v0.2.0-alpha.1-debug.apk
           cd release-assets
-          sha256sum yixi-v0.1.0-alpha.1-debug.apk > yixi-v0.1.0-alpha.1-debug.apk.sha256
+          sha256sum yixi-v0.2.0-alpha.1-debug.apk > yixi-v0.2.0-alpha.1-debug.apk.sha256
 
       - name: Create prerelease
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create v0.1.0-alpha.1 \
-            release-assets/yixi-v0.1.0-alpha.1-debug.apk \
-            release-assets/yixi-v0.1.0-alpha.1-debug.apk.sha256 \
+          gh release create v0.2.0-alpha.1 \
+            release-assets/yixi-v0.2.0-alpha.1-debug.apk \
+            release-assets/yixi-v0.2.0-alpha.1-debug.apk.sha256 \
             --repo wangxi-lab/yixi-android \
             --target "${GITHUB_SHA}" \
-            --title "一息 v0.1.0-alpha.1" \
+            --title "一息 v0.2.0-alpha.1" \
             --prerelease \
-            --notes "首个 Android 预览版本。面向 realme UI 7.0 / Android 16 的真机测试；这是 Debug APK，请仅用于开发验证。已通过编译、单元测试、Lint 和最终 APK 禁用权限扫描。"
+            --notes "界面重设计预览版：新增统一底部导航图标、真实应用图标、七日统计图表与重点式隐私页面，并简化首页视觉层级。面向 realme UI 7.0 / Android 16 真机测试；这是 Debug APK，请仅用于开发验证。已通过编译、单元测试、Lint 和最终 APK 禁用权限扫描。"

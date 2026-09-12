@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">一息</string>
+    <string name="accessibility_service_label">一息 · 应用打开提醒</string>
+    <string name="accessibility_service_description">仅在窗口切换时读取目标应用的包名，用于在打开干扰类应用前显示十秒呼吸提示；不会读取屏幕内容。</string>
+</resources>

@@ -4,9 +4,14 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.wangxilab.yixi.domain.DailyCount
 import com.wangxilab.yixi.domain.InterventionResult
 import com.wangxilab.yixi.domain.RecentIntervention
 import com.wangxilab.yixi.domain.StatisticsSummary
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.TextStyle
+import java.util.Locale
 
 class StatsStore(context: Context) : SQLiteOpenHelper(
     context,
@@ -123,6 +128,33 @@ class StatsStore(context: Context) : SQLiteOpenHelper(
                     )
                 }
             }
+        }
+    }
+
+    @Synchronized
+    fun dailyCounts(days: Int = 7): List<DailyCount> {
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now(zone)
+        return (days.coerceIn(1, 14) - 1 downTo 0).map { offset ->
+            val date = today.minusDays(offset.toLong())
+            val start = date.atStartOfDay(zone).toInstant().toEpochMilli()
+            val end = date.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
+            val count = readableDatabase.rawQuery(
+                """
+                SELECT COUNT(*) FROM interventions
+                WHERE triggered_at >= ? AND triggered_at < ?
+                  AND result IS NOT NULL AND result != 'FAIL_OPEN'
+                """.trimIndent(),
+                arrayOf(start.toString(), end.toString()),
+            ).use { cursor ->
+                if (cursor.moveToFirst()) cursor.getInt(0) else 0
+            }
+            DailyCount(
+                dayLabel = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.CHINA)
+                    .removePrefix("周").removePrefix("星期"),
+                count = count,
+                isToday = date == today,
+            )
         }
     }
 

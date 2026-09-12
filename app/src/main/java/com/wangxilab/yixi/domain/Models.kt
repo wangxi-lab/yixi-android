@@ -1,5 +1,7 @@
 package com.wangxilab.yixi.domain
 
+import android.graphics.drawable.Drawable
+
 enum class InterventionResult {
     PROCEEDED,
     ABANDONED,
@@ -10,7 +12,14 @@ enum class InterventionResult {
 data class LaunchableApp(
     val packageName: String,
     val label: String,
+    val icon: Drawable?,
     val monitored: Boolean,
+)
+
+data class DailyCount(
+    val dayLabel: String,
+    val count: Int,
+    val isToday: Boolean,
 )
 
 data class StatisticsSummary(

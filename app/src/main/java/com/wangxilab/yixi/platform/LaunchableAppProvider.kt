@@ -27,6 +27,7 @@ class LaunchableAppProvider(private val context: Context) {
                 LaunchableApp(
                     packageName = packageName,
                     label = info.loadLabel(context.packageManager).toString().ifBlank { packageName },
+                    icon = runCatching { info.loadIcon(context.packageManager) }.getOrNull(),
                     monitored = packageName in monitoredPackages,
                 )
             }

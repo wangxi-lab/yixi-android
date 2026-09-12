@@ -6,6 +6,7 @@ import android.view.accessibility.AccessibilityManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.wangxilab.yixi.domain.LaunchableApp
+import com.wangxilab.yixi.domain.DailyCount
 import com.wangxilab.yixi.domain.RecentIntervention
 import com.wangxilab.yixi.domain.StatisticsSummary
 import com.wangxilab.yixi.platform.LaunchableAppProvider
@@ -21,6 +22,7 @@ data class AppUiState(
     val apps: List<LaunchableApp> = emptyList(),
     val statistics: StatisticsSummary = StatisticsSummary(),
     val recent: List<RecentIntervention> = emptyList(),
+    val dailyCounts: List<DailyCount> = emptyList(),
     val accessibilityEnabled: Boolean = false,
     val serviceConnected: Boolean = false,
     val lastEventAt: Long = 0L,
@@ -45,6 +47,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 apps = launchableAppProvider.load(app.preferences.monitoredPackages()),
                 statistics = app.statsStore.summary(),
                 recent = app.statsStore.recent(),
+                dailyCounts = app.statsStore.dailyCounts(),
                 accessibilityEnabled = enabled,
                 serviceConnected = enabled && app.serviceStatusStore.connected,
                 lastEventAt = app.serviceStatusStore.lastEventAt,
@@ -66,7 +69,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun clearStatistics() {
         viewModelScope.launch(Dispatchers.IO) {
             app.statsStore.clearAll()
-            _uiState.update { it.copy(statistics = StatisticsSummary(), recent = emptyList()) }
+            _uiState.update {
+                it.copy(
+                    statistics = StatisticsSummary(),
+                    recent = emptyList(),
+                    dailyCounts = app.statsStore.dailyCounts(),
+                )
+            }
         }
     }
 

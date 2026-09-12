@@ -10,12 +10,13 @@ private val YixiColors = lightColorScheme(
     onPrimary = Color.White,
     primaryContainer = Color(0xFFD4E8DC),
     onPrimaryContainer = Color(0xFF17392D),
-    background = Color(0xFFF6F3EC),
-    onBackground = Color(0xFF252622),
-    surface = Color(0xFFFFFCF5),
-    onSurface = Color(0xFF252622),
-    surfaceVariant = Color(0xFFE7E3DA),
-    onSurfaceVariant = Color(0xFF60615B),
+    background = Color(0xFFF2F2F7),
+    onBackground = Color(0xFF171918),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF171918),
+    surfaceVariant = Color(0xFFE9F3EE),
+    onSurfaceVariant = Color(0xFF626865),
+    outlineVariant = Color(0xFFE4E6E5),
 )
 
 @Composable
